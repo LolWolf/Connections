@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <script src="d3.v3.min.js"></script>
+        <title>Connections</title>
+        <link href='http://fonts.googleapis.com/css?family=Merriweather+Sans' rel='stylesheet' type='text/css'>
+        <style>
+            .link {
+                stroke: #bbb;
+                stroke-width: 1px;
+            }
+            circle {
+                stroke: #000;
+            }
+            body {
+                top:-10px;
+                position: fixed;
+                
+                width: 80%;
+                margin: 0px 10%;
+                padding: 1em;
+                
+                text-align: center;
+                
+                box-shadow:0px 0px 5px 1px;
+                
+                font-family: 'Merriweather Sans', sans-serif;
+            }
+            h1 {
+                color:#0099FF;
+            }
+        </style>
+        
+        <script>
+            var _width = 700;
+            var _height = 700;
+            
+            var nodes = {};
+            
+            function onLoad() {
+                var fLayout = d3.layout.force()
+                    .linkDistance(100)
+                    .charge(-1000)
+                    .size([_width, _height]);
+                
+                var color = d3.scale.category20();
+                
+                var svg = d3.select("body").append("svg")
+                    .attr("width", _width)
+                    .attr("height", _height);
+                
+                d3.csv("data.csv", function(e, links) {
+                    links.forEach(function(l) {
+                        l.source = nodes[l.source] || (nodes[l.source] = {name : l.source});
+                        l.target = nodes[l.target] || (nodes[l.target] = {name : l.target});
+                        l.value = +l.value;
+                    });
+            
+                    
+                    fLayout
+                        .nodes(d3.values(nodes))
+                        .links(links)
+                        .start();
+                
+                    
+                    var link = svg.selectAll(".link")
+                        .data(fLayout.links())
+                        .enter()
+                        .append("line")
+                        .attr("class", "link");
+                    
+                    var node = svg.selectAll(".node")
+                        .data(fLayout.nodes())
+                        .enter()
+                        .append("g")
+                        .call(fLayout.drag);
+                    
+                    node.append("circle") 
+                        .attr("r", 5)
+                        .attr("fill", function(d, i) { return color(i); });
+                    
+                    
+                    node.append("text")
+                        .attr("x", 10)
+                        .attr("dy", ".5em")
+                        .text(function(d) { return d.name; });
+                    
+                    fLayout.on("tick", function() {
+                        link.attr("x1", function(d) { return d.source.x; })
+                            .attr("y1", function(d) { return d.source.y; })
+                            .attr("x2", function(d) { return d.target.x; })
+                            .attr("y2", function(d) { return d.target.y; });
+                        
+                        node.attr("transform", function(d) { return "translate(" + d.x + "," + d.y + ")"; });
+                    });
+                    
+                });
+            }
+        </script>
+    </head>
+    <body onload="onLoad()">
+        <div align="center">
+            <h1>People and their connections</h1>
+            <p>Here are the connections I've caught from the comments.</p>
+            <p>You're entirely welcome to click the connections and drag them around; also, just comment on the post if I'm missing any connections (<i>before</i> the camp, of course).</p>
+            - Guille
+        </div>
+    </body>
+</html>
